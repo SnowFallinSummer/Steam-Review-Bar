@@ -153,6 +153,11 @@ function injectStyles(): void {
             line-height: 14px;
         }
 
+        /* Preserve the working copy's compact Steam store view. */
+        #global_header {
+            display: none !important;
+        }
+
         `;
 
     document.head.appendChild(style);

@@ -1,44 +1,36 @@
 # Review Bar
 
-Replaces Steam's text review ratings with a bar that shows the percentage of positive and negative reviews.
+Review Bar replaces Steam's text-based review summaries with compact positive-percentage bars. It uses review information already supplied by Steam and does not make external review API requests.
 
-The plugin works on Steam Store app pages, search results, and wishlist entries when Steam provides review percentage data. It reads information already present in the page and does not make separate API requests. It runs as a WebKit preload, so it does not need a Lua backend.
+## Where it works
 
-## Build and install
+- **Steam Store app pages:** Replaces the recent-review and overall/language-review summaries with labeled percentage bars. Clicking a bar jumps to the reviews section.
+- **Steam search results:** Replaces the review summary with a compact percentage bar.
+- **Steam Wishlist:** Replaces the review percentage text with a bar.
+- **Steam header:** Hides the global Steam header in the embedded Store view, matching the working configuration.
+
+The Store, Search, and Wishlist features run in Steam's WebKit browser context. Review percentages are read from Steam's existing tooltip and accessibility metadata. SteamDB elements are ignored.
+
+## Build
 
 Requirements: [Millennium](https://github.com/SteamClientHomebrew/Millennium) and [Bun](https://bun.sh/).
-
-From this repository's root:
 
 ```sh
 bun install
 bun run build
 ```
 
-Starlight builds the plugin using the checked-in `millennium.toml`. Enable **Review Bar** in Millennium's plugin settings and restart Steam if needed.
+Starlight packages the plugin using the checked-in `millennium.toml`.
 
-## If it stops matching
+## Implementation notes
 
-Steam's store-page class names (`.user_reviews_summary_row` and `data-tooltip-html`) have been stable for a long time, but Valve can change them without notice. If the bar does not appear:
+- Store, Search, and Wishlist selectors and score parsing are in `webview/preload.ts`.
+- Steam may change its DOM metadata or tooltip markup; those integration points may need maintenance.
+- Review Bar reads review information already present in Steam's page and does not query an external review API.
 
-1. Open a store page in Steam.
-2. Use Millennium's remote debugger or devtools access to inspect the DOM around the review score.
-3. Update `ROW_SELECTOR` and the regular expressions in `parseScore()` in `webview/preload.ts` to match Steam's current markup.
+## AI assistance
 
-## Customizing the look
-
-The colors are CSS variables set at the top of `injectStyles()` in `webview/preload.ts`: `--reviewbar-positive` and `--reviewbar-negative`. Change their hex values to customize the colors. Bar width, height, and label format are defined nearby.
-
-## Scope and limitations
-
-- Works on Steam Store app pages, search results, and wishlist entries where review percentage metadata is available.
-- Does not change the Library interface.
-- Does not fetch review data from Steam's API. It uses information already present in the page.
-- Steam may change its page structure or tooltip markup, which could require updates to the selectors.
-
-## AI assistance and maintenance
-
-AI tools helped with parts of development and troubleshooting. The maintainer is responsible for reviewing, testing, and maintaining the code. This disclosure is included for submission transparency.
+AI tools assisted with parts of development and troubleshooting. The maintainer reviews, tests, and maintains the code. This disclosure is included for submission transparency.
 
 ## License
 
