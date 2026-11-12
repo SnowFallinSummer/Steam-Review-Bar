@@ -13,7 +13,7 @@ The Store, Search, and Wishlist features run in Steam's WebKit browser context. 
 
 ## Download and install
 
-**[Open GitHub Releases](https://github.com/SnowFallinSummer/Steam-Review-Bar/releases/latest)** for permanent downloads. Each published version includes its installable `.star` package. No release has been published yet; the first package will appear after the initial version tag is created.
+**[Open GitHub Releases](https://github.com/SnowFallinSummer/Steam-Review-Bar/releases)** for permanent downloads. Each published version includes its installable `.star` package. No release has been published yet; the first package will appear after the initial version tag is created.
 
 You need [Millennium](https://github.com/SteamClientHomebrew/Millennium) installed first. For a manual install:
 
