@@ -1,44 +1,37 @@
 # Review Bar
 
-Replaces Steam's text review ratings with a bar that shows the percentage of positive and negative reviews.
+Review Bar replaces Steam's text-based review summaries with compact positive/negative percentage bars.
 
-The plugin works on Steam Store app pages, search results, wishlist entries, and Steam Library game details when Steam provides review percentage data. It reads review metadata already available in Steam's page or cached client app overview; it does not make separate API requests. It runs as a WebKit preload, so it does not need a Lua backend.
+## Where it works
 
-## Build and install
+- **Steam Store app pages:** Replaces the recent-review and overall/language-review summaries with labeled percentage bars. Clicking a bar jumps to the reviews section.
+- **Steam search results:** Replaces the review summary with a compact percentage bar.
+- **Steam Wishlist:** Replaces the review percentage text with a bar.
+- **Steam Library game details:** Adds a Community Reviews section using Steam's cached app overview and Steam's own React components.
+
+The Store, Search, and Wishlist views run in Steam's WebKit browser context, where Steam does not expose its React component tree. The Library integration runs in the Steam frontend and uses Millennium's router hook plus Steam UI components. Review Bar does not make external review API requests.
+
+## Build
 
 Requirements: [Millennium](https://github.com/SteamClientHomebrew/Millennium) and [Bun](https://bun.sh/).
-
-From this repository's root:
 
 ```sh
 bun install
 bun run build
 ```
 
-Starlight builds the plugin using the checked-in `millennium.toml`. Enable **Review Bar** in Millennium's plugin settings and restart Steam if needed.
+Starlight packages the plugin using the checked-in `millennium.toml`.
 
-## If it stops matching
+## Implementation notes
 
-Steam's store-page class names (`.user_reviews_summary_row` and `data-tooltip-html`) have been stable for a long time, but Valve can change them without notice. If the bar does not appear:
+- Store/Search/Wishlist review percentages are read from Steam's existing tooltip and accessibility metadata.
+- Library review percentages are read from `appStore.GetAppOverviewByAppID(appId)`, specifically `review_percentage_with_bombs`.
+- The Library patch targets `/library/app/:appid` and inserts a Steam-native `PanelSection` with Steam's `ProgressBar` component. If the expected Steam component tree is unavailable, the patch leaves the Library page unchanged.
+- Steam may change its DOM metadata or internal React component structure. The relevant integration points are isolated in `webview/preload.ts` and `frontend/index.tsx`.
 
-1. Open a store page in Steam.
-2. Use Millennium's remote debugger or devtools access to inspect the DOM around the review score.
-3. Update `ROW_SELECTOR` and the regular expressions in `parseScore()` in `webview/preload.ts` to match Steam's current markup.
+## AI assistance
 
-## Customizing the look
-
-The colors are CSS variables set at the top of `injectStyles()` in `webview/preload.ts`: `--reviewbar-positive` and `--reviewbar-negative`. Change their hex values to customize the colors. Bar width, height, and label format are defined nearby.
-
-## Scope and limitations
-
-- Works on Steam Store app pages, search results, and wishlist entries where review percentage metadata is available.
-- Does not change the Library interface.
-- Does not fetch review data from Steam's API. It uses information already present in the page.
-- Steam may change its page structure or tooltip markup, which could require updates to the selectors.
-
-## AI assistance and maintenance
-
-AI tools helped with parts of development and troubleshooting. The maintainer is responsible for reviewing, testing, and maintaining the code. This disclosure is included for submission transparency.
+AI tools assisted with parts of development and troubleshooting. The maintainer reviews, tests, and maintains the code. This disclosure is included in accordance with the PluginDatabase submission guidelines.
 
 ## License
 
