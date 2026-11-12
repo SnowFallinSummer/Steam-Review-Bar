@@ -4,6 +4,7 @@ import {
   createReactTreePatcher,
   definePlugin,
   findInReactTree,
+  IconsModule,
   PanelSection,
   PanelSectionRow,
   ProgressBar,
@@ -157,7 +158,7 @@ export default definePlugin(() => {
 
   return {
     title: 'Review Bar',
-    icon: <></>,
+    icon: <IconsModule.Settings />, 
     onDismount: () => {
       routerHook.removePatch(LIBRARY_APP_ROUTE, routePatch);
 
