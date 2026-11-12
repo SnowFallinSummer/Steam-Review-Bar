@@ -32,10 +32,10 @@ jobs:
       - name: Build plugin
         run: |
           mkdir -p dist
-          bun run build -- --release --of dist/Review-Bar.star
+          bun run build -- --release --of dist
 
       - name: Verify package
-        run: ./node_modules/.bin/starlight verify dist/Review-Bar.star
+        run: ./node_modules/.bin/starlight verify dist/com.snowfallinsummer.reviewbar.star
 
       - name: Publish GitHub release
         uses: softprops/action-gh-release@v2
@@ -44,4 +44,4 @@ jobs:
           name: Review Bar ${{ inputs.tag_name || github.ref_name }}
           target_commitish: ${{ github.sha }}
           generate_release_notes: true
-          files: dist/Review-Bar.star
+          files: dist/com.snowfallinsummer.reviewbar.star
