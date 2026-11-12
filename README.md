@@ -2,7 +2,7 @@
 
 Replaces Steam's text review ratings with a bar that shows the percentage of positive and negative reviews.
 
-The plugin works on Steam Store app pages, search results, and wishlist entries when Steam provides review percentage data. It reads information already present in the page and does not make separate API requests. It runs as a WebKit preload, so it does not need a Lua backend.
+The plugin works on Steam Store app pages, search results, wishlist entries, and Steam Library game details when Steam provides review percentage data. It reads review metadata already available in Steam's page or cached client app overview; it does not make separate API requests. It runs as a WebKit preload, so it does not need a Lua backend.
 
 ## Build and install
 
