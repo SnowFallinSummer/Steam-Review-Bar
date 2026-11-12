@@ -13,12 +13,12 @@ The Store, Search, and Wishlist features run in Steam's WebKit browser context. 
 
 ## Download and install
 
-**[Download the latest release](https://github.com/SnowFallinSummer/Steam-Review-Bar/releases/latest)** and save the attached `.star` package.
+**[Open GitHub Releases](https://github.com/SnowFallinSummer/Steam-Review-Bar/releases/latest)** for permanent downloads. Each published version includes its installable `.star` package. No release has been published yet; the first package will appear after the initial version tag is created.
 
 You need [Millennium](https://github.com/SteamClientHomebrew/Millennium) installed first. For a manual install:
 
 1. Fully exit Steam.
-2. Download the latest `.star` file from the Releases page above.
+2. Once a version is published, download its `.star` file from the Releases page above.
 3. Put the `.star` file in Millennium's plugin directory:
    - **Windows:** `%STEAM%\millennium\plugin`
    - **Linux:** `~/.local/share/millennium/plugins`
