@@ -24,6 +24,7 @@ interface ReviewScoreSectionProps {
 const REVIEW_SECTION_KEY = 'review-bar-community-reviews';
 const LIBRARY_APP_ROUTE = '/library/app/:appid';
 const renderPatches = new Set<{ unpatch: () => void; hasUnpatched: boolean }>();
+let pluginActive = false;
 
 function ReviewScoreSection({ overview }: ReviewScoreSectionProps) {
   const score = overview.review_percentage_with_bombs;
@@ -63,7 +64,7 @@ const libraryRenderPatch = createReactTreePatcher(
   ],
   (_args: any[], rendered?: ReactElement) => {
     try {
-      if (!rendered || !appDetailsClasses?.InnerContainer) {
+      if (!pluginActive || !rendered || !appDetailsClasses?.InnerContainer) {
         return rendered;
       }
 
@@ -141,6 +142,8 @@ function patchLibraryRoute(route: any): any {
 }
 
 export default definePlugin(() => {
+  pluginActive = true;
+
   const routePatch = routerHook.addPatch(
     LIBRARY_APP_ROUTE,
     patchLibraryRoute,
@@ -150,6 +153,7 @@ export default definePlugin(() => {
     title: 'Review Bar',
     icon: <IconsModule.Settings />,
     onDismount: () => {
+      pluginActive = false;
       routerHook.removePatch(LIBRARY_APP_ROUTE, routePatch);
 
       for (const patch of renderPatches) {
