@@ -5,6 +5,9 @@ version = "1.0.0"
 author = "SnipCheddaBombs"
 description = "Replaces Steam review labels with percentage score bars."
 
+[frontend]
+entry = "frontend/index.tsx"
+
 [webkit]
 entry = "webview/preload.ts"
 
@@ -13,4 +16,4 @@ output_path = "auto"
 
 [dev]
 auto_restart = true
-reload_steamui_when = "backend"
+reload_steamui_when = "frontend"
