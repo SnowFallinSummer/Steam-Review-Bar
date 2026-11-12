@@ -71,8 +71,12 @@ const libraryRenderPatch = createReactTreePatcher(
       const appDetails = findInReactTree(
         rendered,
         (node: any) =>
-          Boolean(node?.props?.children?.props?.overview),
-      )?.props?.children;
+          Boolean(
+            node?.type &&
+              node?.props?.overview &&
+              typeof node.props.overview.review_percentage_with_bombs === 'number',
+          ),
+      );
 
       const overview = appDetails?.props?.overview;
 
