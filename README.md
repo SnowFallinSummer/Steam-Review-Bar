@@ -11,12 +11,27 @@ Review Bar replaces Steam's text-based review summaries with compact positive-pe
 
 The Store, Search, and Wishlist features run in Steam's WebKit browser context. Review percentages are read from Steam's existing tooltip and accessibility metadata. SteamDB elements are ignored.
 
+## Download and install
+
+**[Download the latest release](https://github.com/SnowFallinSummer/Steam-Review-Bar/releases/latest)** and save the attached `.star` package.
+
+You need [Millennium](https://github.com/SteamClientHomebrew/Millennium) installed first. For a manual install:
+
+1. Fully exit Steam.
+2. Download the latest `.star` file from the Releases page above.
+3. Put the `.star` file in Millennium's plugin directory:
+   - **Windows:** `%STEAM%\\millennium\\plugin`
+   - **Linux:** `~/.local/share/millennium/plugins`
+4. Start Steam, open **Steam → Millennium → Plugins**, enable the plugin, save changes, and restart Steam if prompted.
+
+See Millennium's [official plugin installation guide](https://docs.steambrew.app/users/guides/installing-addons) and [plugin directory reference](https://docs.steambrew.app/users/getting-started/structure) for current instructions.
+
 ## Build
 
 Requirements: [Millennium](https://github.com/SteamClientHomebrew/Millennium) and [Bun](https://bun.sh/).
 
 ```sh
-bun install
+bun install --frozen-lockfile
 bun run build
 ```
 
