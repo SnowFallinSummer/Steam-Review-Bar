@@ -32,11 +32,11 @@ jobs:
           bun run build -- --release --of dist
 
       - name: Verify package
-        run: ./node_modules/.bin/starlight verify dist/com.snowfallinsummer.reviewbar.star
+        run: ./node_modules/.bin/starlight verify dist/com.example.reviewbar.star
 
       - name: Upload installable plugin
         uses: actions/upload-artifact@v4
         with:
           name: Review-Bar-star
-          path: dist/com.snowfallinsummer.reviewbar.star
+          path: dist/com.example.reviewbar.star
           if-no-files-found: error
