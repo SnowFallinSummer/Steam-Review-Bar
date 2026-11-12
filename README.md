@@ -20,7 +20,7 @@ You need [Millennium](https://github.com/SteamClientHomebrew/Millennium) install
 1. Fully exit Steam.
 2. Download the latest `.star` file from the Releases page above.
 3. Put the `.star` file in Millennium's plugin directory:
-   - **Windows:** `%STEAM%\\millennium\\plugin`
+   - **Windows:** `%STEAM%\millennium\plugin`
    - **Linux:** `~/.local/share/millennium/plugins`
 4. Start Steam, open **Steam → Millennium → Plugins**, enable the plugin, save changes, and restart Steam if prompted.
 
