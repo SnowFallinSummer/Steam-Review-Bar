@@ -35,7 +35,10 @@ jobs:
           bun run build -- --release --of dist
 
       - name: Verify package
-        run: ./node_modules/.bin/starlight verify dist/com.snowfallinsummer.reviewbar.star
+        run: |
+          mapfile -t PACKAGES < <(find dist -maxdepth 1 -type f -name '*.star' -print)
+          test "${#PACKAGES[@]}" -eq 1
+          ./node_modules/.bin/starlight verify "${PACKAGES[0]}"
 
       - name: Publish GitHub release
         uses: softprops/action-gh-release@v2
@@ -44,4 +47,4 @@ jobs:
           name: Review Bar ${{ inputs.tag_name || github.ref_name }}
           target_commitish: ${{ github.sha }}
           generate_release_notes: true
-          files: dist/com.snowfallinsummer.reviewbar.star
+          files: dist/*.star
