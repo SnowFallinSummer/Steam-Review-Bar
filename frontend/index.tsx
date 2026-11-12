@@ -25,12 +25,6 @@ const REVIEW_SECTION_KEY = 'review-bar-community-reviews';
 const LIBRARY_APP_ROUTE = '/library/app/:appid';
 const renderPatches = new Set<{ unpatch: () => void; hasUnpatched: boolean }>();
 
-let currentOverview: SteamAppOverview | undefined;
-
-/**
- * Renders Steam's cached community review percentage with native Steam UI.
- * A score of zero means Steam has no aggregate review score for the app.
- */
 function ReviewScoreSection({ overview }: ReviewScoreSectionProps) {
   const score = overview.review_percentage_with_bombs;
 
@@ -57,31 +51,31 @@ function ReviewScoreSection({ overview }: ReviewScoreSectionProps) {
 }
 
 /**
- * Millennium's RoutePatch receives React Router route props. Its actual route
- * element is in route.children; there is no documented renderFunc property.
- *
- * Patch that element's component return tree, then patch the Steam app-details
- * component found in that tree. The patcher caches component types so normal
- * route rerenders do not repeatedly wrap the same Steam component.
+ * A Millennium RoutePatch receives React Router route props. Its children
+ * element is a wrapper around Steam's original route component. The first
+ * tree-patcher step selects that route component element; the handler then
+ * receives the component's rendered page tree, where Steam's app-details
+ * section and its inner container can be located.
  */
 const libraryRenderPatch = createReactTreePatcher(
   [
-    (tree: any) => {
-      const appDetails = findInReactTree(
-        tree,
-        (node: any) =>
-          Boolean(node?.type && node?.props?.children?.props?.overview),
-      )?.props?.children;
-
-      currentOverview = appDetails?.props?.overview;
-      return appDetails ?? null;
-    },
+    (tree: any) => (tree?.type ? tree : null),
   ],
   (_args: any[], rendered?: ReactElement) => {
     try {
-      const overview = currentOverview;
+      if (!rendered || !appDetailsClasses?.InnerContainer) {
+        return rendered;
+      }
 
-      if (!rendered || !overview || !appDetailsClasses?.InnerContainer) {
+      const appDetails = findInReactTree(
+        rendered,
+        (node: any) =>
+          Boolean(node?.props?.children?.props?.overview),
+      )?.props?.children;
+
+      const overview = appDetails?.props?.overview;
+
+      if (!overview) {
         return rendered;
       }
 
@@ -108,12 +102,11 @@ const libraryRenderPatch = createReactTreePatcher(
         return rendered;
       }
 
-      children.splice(
-        Math.min(1, children.length),
-        0,
-        <ReviewScoreSection key={REVIEW_SECTION_KEY} overview={overview} />,
+      const scoreSection = (
+        <ReviewScoreSection key={REVIEW_SECTION_KEY} overview={overview} />
       );
 
+      children.splice(Math.min(1, children.length), 0, scoreSection);
       container.props.children = children;
     } catch (error) {
       console.warn(
