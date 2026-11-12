@@ -2,6 +2,7 @@
 id = "com.snowfallinsummer.reviewbar"
 name = "Review Bar"
 version = "1.0.0"
+author = "SnowFallinSummer"
 description = "Shows positive and negative Steam review percentages in a bar."
 
 [webkit]
