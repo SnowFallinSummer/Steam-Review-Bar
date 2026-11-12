@@ -135,35 +135,6 @@ function injectStyles(): void {
             line-height: 14px;
         }
 
-        /* Library game details */
-
-        .reviewbar-library-panel {
-            margin: 8px 0;
-            padding: 12px 14px;
-            border-radius: 3px;
-            background: var(--reviewbar-panel-background, rgba(0, 0, 0, 0.18));
-            color: var(--reviewbar-text);
-        }
-
-        .reviewbar-library-heading {
-            margin-bottom: 8px;
-            color: var(--reviewbar-label);
-            font-size: 12px;
-            font-weight: 600;
-            letter-spacing: 0.02em;
-        }
-
-        .reviewbar-library-panel .reviewbar-track {
-            width: 100%;
-            max-width: 180px;
-            flex-basis: 180px;
-        }
-
-        .reviewbar-library-panel .reviewbar-label {
-            font-size: 13px;
-            font-weight: 600;
-        }
-
         /* Wishlist */
 
         .reviewbar-wishlist {
@@ -541,101 +512,6 @@ function processWishlistReviews(): void {
 }
 
 /* -------------------------------------------------------------------------- */
-/* Steam Library game details                                                */
-/* -------------------------------------------------------------------------- */
-
-const LIBRARY_PANEL_ID = 'reviewbar-library-panel';
-
-function getLibraryAppId(): number | null {
-    const match = window.location.pathname.match(/\/library\/app\/(\d+)/);
-
-    if (!match) {
-        return null;
-    }
-
-    const appId = Number.parseInt(match[1], 10);
-
-    return Number.isSafeInteger(appId) && appId > 0 ? appId : null;
-}
-
-function getLibraryReviewScore(appId: number): ParsedScore | null {
-    // Millennium exposes Steam's own cached app overview to the client.
-    // This avoids an external request and uses the same review percentage
-    // Steam already stores for the Library game details view.
-    const steamWindow = window as typeof window & {
-        appStore?: {
-            GetAppOverviewByAppID?: (id: number) => {
-                review_score_with_bombs?: number;
-                review_percentage_with_bombs?: number;
-            } | null;
-        };
-    };
-
-    const overview = steamWindow.appStore?.GetAppOverviewByAppID?.(appId);
-
-    if (!overview || !Number.isFinite(overview.review_percentage_with_bombs)) {
-        return null;
-    }
-
-    // Steam uses review_score_with_bombs = 0 when no aggregate score exists.
-    if (!overview.review_score_with_bombs) {
-        return null;
-    }
-
-    return {
-        positivePct: Math.max(0, Math.min(100, Math.round(overview.review_percentage_with_bombs!))),
-        reviewCount: null,
-    };
-}
-
-function processLibraryReviewScore(): void {
-    const appId = getLibraryAppId();
-    if (!appId) {
-        document.getElementById(LIBRARY_PANEL_ID)?.remove();
-        return;
-    }
-
-    const score = getLibraryReviewScore(appId);
-    if (!score) {
-        document.getElementById(LIBRARY_PANEL_ID)?.remove();
-        return;
-    }
-
-    const existing = document.getElementById(LIBRARY_PANEL_ID);
-    if (existing?.getAttribute('data-appid') === String(appId)) {
-        const label = existing.querySelector('.reviewbar-label');
-        const fill = existing.querySelector<HTMLElement>('.reviewbar-fill');
-        if (label) label.textContent = `${score.positivePct}%`;
-        if (fill) fill.style.width = `${score.positivePct}%`;
-        return;
-    }
-    existing?.remove();
-
-    const rightColumn = document.querySelector<HTMLElement>('[class*="RightColumn"]');
-    if (!rightColumn) {
-        return;
-    }
-
-    // Reuse Steam's own right-column section classes when present so the
-    // injected review summary follows the Library's native layout.
-    const nativeSection = rightColumn.querySelector<HTMLElement>('[class*="RightColumnSection"]');
-    const panel = document.createElement('div');
-    panel.id = LIBRARY_PANEL_ID;
-    panel.setAttribute('data-appid', String(appId));
-    panel.className = `reviewbar-library-panel ${nativeSection?.className ?? ''}`.trim();
-
-    const heading = document.createElement('div');
-    heading.className = 'reviewbar-library-heading';
-    heading.textContent = 'COMMUNITY REVIEWS';
-
-    const bar = buildBar(score, 'normal');
-    bar.title = `${score.positivePct}% positive Steam reviews`;
-
-    panel.append(heading, bar);
-    rightColumn.prepend(panel);
-}
-
-/* -------------------------------------------------------------------------- */
 /* Scanner                                                                    */
 /* -------------------------------------------------------------------------- */
 
@@ -643,7 +519,6 @@ function scan(): void {
     processStoreReviewRows();
     processSearchResults();
     processWishlistReviews();
-    processLibraryReviewScore();
 }
 
 let scanQueued = false;
