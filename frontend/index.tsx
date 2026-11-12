@@ -23,6 +23,9 @@ interface ReviewScoreSectionProps {
 
 const REVIEW_SECTION_KEY = 'review-bar-community-reviews';
 const LIBRARY_APP_ROUTE = '/library/app/:appid';
+const patchedRouteProps = new WeakSet<object>();
+const patchedRenderFunctions = new WeakSet<Function>();
+const renderPatches = new Set<{ unpatch: () => void; hasUnpatched: boolean }>();
 
 /**
  * Renders the cached Steam review score with Steam's own React components.
@@ -65,9 +68,16 @@ function patchLibraryRoute(routerTree: any): any {
       (node: any) => typeof node?.renderFunc === 'function',
     );
 
-    if (!routeProps) {
+    if (
+      !routeProps ||
+      patchedRouteProps.has(routeProps) ||
+      typeof routeProps.renderFunc !== 'function' ||
+      patchedRenderFunctions.has(routeProps.renderFunc)
+    ) {
       return routerTree;
     }
+
+    patchedRouteProps.add(routeProps);
 
     let overview: SteamAppOverview | undefined;
 
@@ -128,7 +138,10 @@ function patchLibraryRoute(routerTree: any): any {
       'ReviewBarLibraryScore',
     );
 
-    afterPatch(routeProps, 'renderFunc', renderPatch);
+    const patch = afterPatch(routeProps, 'renderFunc', renderPatch);
+    patchedRenderFunctions.add(routeProps.renderFunc);
+    patchedRenderFunctions.add(patch.patchedFunction as Function);
+    renderPatches.add(patch);
   } catch (error) {
     console.warn('[Review Bar] Library route hook failed; leaving the page unchanged.', error);
   }
@@ -147,6 +160,14 @@ export default definePlugin(() => {
     icon: <></>,
     onDismount: () => {
       routerHook.removePatch(LIBRARY_APP_ROUTE, routePatch);
+
+      for (const patch of renderPatches) {
+        if (!patch.hasUnpatched) {
+          patch.unpatch();
+        }
+      }
+
+      renderPatches.clear();
     },
   };
 });
