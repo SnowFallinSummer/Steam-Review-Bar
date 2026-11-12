@@ -547,7 +547,7 @@ function processWishlistReviews(): void {
 const LIBRARY_PANEL_ID = 'reviewbar-library-panel';
 
 function getLibraryAppId(): number | null {
-    const match = window.location.pathname.match(/\\/library\\/app\\/(\\d+)/);
+    const match = window.location.pathname.match(/\/library\/app\/(\d+)/);
 
     if (!match) {
         return null;
