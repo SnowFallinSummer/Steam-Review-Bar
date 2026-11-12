@@ -1,9 +1,9 @@
 [plugin]
-id = "com.snowfallinsummer.reviewbar"
+id = "com.example.reviewbar"
 name = "Review Bar"
 version = "1.0.0"
-author = "SnowFallinSummer"
-description = "Shows positive and negative Steam review percentages in a bar."
+author = "SnipCheddaBombs"
+description = "Replaces Steam review labels with percentage score bars."
 
 [frontend]
 entry = "frontend/index.tsx"
