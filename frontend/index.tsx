@@ -13,7 +13,6 @@ import {
 import type { ReactElement } from 'react';
 
 interface SteamAppOverview {
-  appid?: number;
   review_score_with_bombs?: number;
   review_percentage_with_bombs?: number;
 }
@@ -24,13 +23,13 @@ interface ReviewScoreSectionProps {
 
 const REVIEW_SECTION_KEY = 'review-bar-community-reviews';
 const LIBRARY_APP_ROUTE = '/library/app/:appid';
-const patchedRouteProps = new WeakSet<object>();
-const patchedRenderFunctions = new WeakSet<Function>();
 const renderPatches = new Set<{ unpatch: () => void; hasUnpatched: boolean }>();
 
+let currentOverview: SteamAppOverview | undefined;
+
 /**
- * Renders the cached Steam review score with Steam's own React components.
- * Steam uses review_score_with_bombs === 0 when no aggregate score is available.
+ * Renders Steam's cached community review percentage with native Steam UI.
+ * A score of zero means Steam has no aggregate review score for the app.
  */
 function ReviewScoreSection({ overview }: ReviewScoreSectionProps) {
   const score = overview.review_percentage_with_bombs;
@@ -58,96 +57,94 @@ function ReviewScoreSection({ overview }: ReviewScoreSectionProps) {
 }
 
 /**
- * Hooks the actual Steam Library game-details route. The patch is deliberately
- * defensive: if Steam changes the component tree or its class map, the page is
- * left untouched instead of interrupting the Library.
+ * Millennium's RoutePatch receives React Router route props. Its actual route
+ * element is in route.children; there is no documented renderFunc property.
+ *
+ * Patch that element's component return tree, then patch the Steam app-details
+ * component found in that tree. The patcher caches component types so normal
+ * route rerenders do not repeatedly wrap the same Steam component.
  */
-function patchLibraryRoute(routerTree: any): any {
-  try {
-    const routeProps = findInReactTree(
-      routerTree,
-      (node: any) => typeof node?.renderFunc === 'function',
-    );
+const libraryRenderPatch = createReactTreePatcher(
+  [
+    (tree: any) => {
+      const appDetails = findInReactTree(
+        tree,
+        (node: any) =>
+          Boolean(node?.type && node?.props?.children?.props?.overview),
+      )?.props?.children;
 
-    if (
-      !routeProps ||
-      patchedRouteProps.has(routeProps) ||
-      typeof routeProps.renderFunc !== 'function' ||
-      patchedRenderFunctions.has(routeProps.renderFunc)
-    ) {
-      return routerTree;
+      currentOverview = appDetails?.props?.overview;
+      return appDetails ?? null;
+    },
+  ],
+  (_args: any[], rendered?: ReactElement) => {
+    try {
+      const overview = currentOverview;
+
+      if (!rendered || !overview || !appDetailsClasses?.InnerContainer) {
+        return rendered;
+      }
+
+      const container = findInReactTree(
+        rendered,
+        (node: any) =>
+          Boolean(node?.type) &&
+          typeof node?.props?.className === 'string' &&
+          node.props.className.includes(appDetailsClasses.InnerContainer),
+      );
+
+      if (!container?.props) {
+        return rendered;
+      }
+
+      const currentChildren = container.props.children;
+      const children = Array.isArray(currentChildren)
+        ? [...currentChildren]
+        : currentChildren == null
+          ? []
+          : [currentChildren];
+
+      if (children.some((child: any) => child?.key === REVIEW_SECTION_KEY)) {
+        return rendered;
+      }
+
+      children.splice(
+        Math.min(1, children.length),
+        0,
+        <ReviewScoreSection key={REVIEW_SECTION_KEY} overview={overview} />,
+      );
+
+      container.props.children = children;
+    } catch (error) {
+      console.warn(
+        '[Review Bar] Could not add Library review section; leaving the page unchanged.',
+        error,
+      );
     }
 
-    patchedRouteProps.add(routeProps);
+    return rendered;
+  },
+  'ReviewBarLibraryScore',
+);
 
-    let overview: SteamAppOverview | undefined;
+function patchLibraryRoute(route: any): any {
+  try {
+    const routeElement = route?.children;
 
-    const renderPatch = createReactTreePatcher(
-      [
-        (tree: any) => {
-          const appDetails = findInReactTree(
-            tree,
-            (node: any) => Boolean(node?.props?.children?.props?.overview),
-          )?.props?.children;
+    if (!routeElement || typeof routeElement.type !== 'function') {
+      return route;
+    }
 
-          overview = appDetails?.props?.overview;
-          return appDetails ?? null;
-        },
-      ],
-      (_args: any[], rendered?: ReactElement) => {
-        try {
-          if (
-            !rendered ||
-            !overview ||
-            !appDetailsClasses?.InnerContainer
-          ) {
-            return rendered;
-          }
-
-          const container = findInReactTree(
-            rendered,
-            (node: any) =>
-              Array.isArray(node?.props?.children) &&
-              typeof node?.props?.className === 'string' &&
-              node.props.className.includes(appDetailsClasses.InnerContainer),
-          );
-
-          if (!container?.props) {
-            return rendered;
-          }
-
-          const children = [...container.props.children].filter(
-            (child: any) => child?.key !== REVIEW_SECTION_KEY,
-          );
-
-          children.splice(
-            Math.min(1, children.length),
-            0,
-            <ReviewScoreSection
-              key={REVIEW_SECTION_KEY}
-              overview={overview}
-            />,
-          );
-
-          container.props.children = children;
-        } catch (error) {
-          console.warn('[Review Bar] Could not add Library review section; leaving the page unchanged.', error);
-        }
-
-        return rendered;
-      },
-      'ReviewBarLibraryScore',
-    );
-
-    const patch = afterPatch(routeProps, 'renderFunc', renderPatch);
-    patchedRenderFunctions.add(routeProps.renderFunc);
-    patchedRenderFunctions.add(patch.patchedFunction as Function);
+    const patch = afterPatch(routeElement, 'type', libraryRenderPatch);
     renderPatches.add(patch);
   } catch (error) {
-    console.warn('[Review Bar] Library route hook failed; leaving the page unchanged.', error);
+    console.warn(
+      '[Review Bar] Library route hook failed; leaving the page unchanged.',
+      error,
+    );
   }
 
-  return routerTree;
+  return route;
 }
 
 export default definePlugin(() => {
@@ -158,7 +155,7 @@ export default definePlugin(() => {
 
   return {
     title: 'Review Bar',
-    icon: <IconsModule.Settings />, 
+    icon: <IconsModule.Settings />,
     onDismount: () => {
       routerHook.removePatch(LIBRARY_APP_ROUTE, routePatch);
 
